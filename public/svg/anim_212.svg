@@ -1,0 +1,28 @@
+<svg version="1.1" baseProfile="tiny" id="svg-root"
+width="185" height="129" viewBox="0 0 129 185"
+xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_0.svg">
+		<animate id='frame_0' attributeName='display' values='inline;none;none;none;none;none;none;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_12.svg">
+		<animate id='frame_1' attributeName='display' values='none;inline;none;none;none;none;none;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_24.svg">
+		<animate id='frame_2' attributeName='display' values='none;none;inline;none;none;none;none;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_36.svg">
+		<animate id='frame_4' attributeName='display' values='none;none;none;inline;none;none;none;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_48.svg">
+		<animate id='frame_5' attributeName='display' values='none;none;none;none;inline;none;none;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_60.svg">
+		<animate id='frame_6' attributeName='display' values='none;none;none;none;none;inline;none;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_72.svg">
+		<animate id='frame_8' attributeName='display' values='none;none;none;none;none;none;inline;none;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+	<image width="185" height="129" xlink:href="./index/get_svg_file/weather_212_84.svg">
+		<animate id='frame_9' attributeName='display' values='none;none;none;none;none;none;none;inline;' dur='6s' fill='freeze' begin="0s" repeatCount="indefinite"/>
+	</image>
+</svg>
