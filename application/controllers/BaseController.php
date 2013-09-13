@@ -88,4 +88,11 @@ abstract class BaseController extends Zend_Controller_Action
 	{
 		return trim(htmlentities($text));
 	}
+
+	public function sanitizeFilePath($path)
+	{
+		$path = str_replace("/", "", $path);
+		$path = str_replace("\\", "", $path);
+		return $path;
+	}
 }

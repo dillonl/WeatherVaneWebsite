@@ -7,7 +7,6 @@ body
     font-family: "Trebuchet MS", Verdana, Helvetica, Sans-Serif;
     color: #232323;
     background-color: #e8ebee;
-    background-image: url(../images/backer.gif);
 	background-position: center;
 }
 root { display: block; }
@@ -75,65 +74,59 @@ h2.page_header { color: #e8ebee; font-size: 20pt; margin-top: 10px; }
 {
 	text-align: left;
 }
-#survey-container
+.red-border
 {
-	padding: 0px 20px 0px 20px;
+	border: solid red 1px;
 }
-#survey-questions
+.weather-selector
 {
-	padding-left: 25px;
+	width: 140px;
 }
-.survey-question
+#svg-container
+{
+	width: 100%;
+	height: 100%;
+}
+#form-container
+{
+	width: 450px;
+}
+
+#svg-controls
 {
 	padding: 10px 0px 10px 0px;
 }
-.survey-question label
-{
-	display: block;
-	font-weight: bold;
-}
-.survey-question input
-{
-	margin-left: 30px;
-}
-#submit-area { text-align: center; }
-
-.survey-form
-{
-	padding: 20px;
-}
-.survey-form label
-{
-	display: inline-block;
-	width: 150px;
-}
-
-.survey-form-short-labels
-{
-	padding: 20px;
-}
-
-.survey-form-short-labels label
-{
-	display: inline-block;
-	width: 50px;
-}
-#poison-control-text
-{
-	display: inline-block;
-	float: left;
-}
-.thank-you-text
-{
-	font-weight: bold;
-	font-size: 15px;
-	padding-right: 5px;
-}
-#poison-control-image img
-{
-	max-height: 100px;
-}
-#poison-control-image
+#frame-controls
 {
 	float: left;
+}
+#zoom-controls
+{
+	float:right;
+}
+.bold-zoom
+{
+	font-weight: 900;
+	font-size: 15pt;
+}
+.svg-control-button
+{
+	display: inline-block;
+	cursor: pointer;
+	padding: 5px 8px;
+	border: 1px solid #768797;
+
+	/* disable the select */
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	/* disable the select */
+}
+
+.svg-control-button:hover
+{
+	background-color: #768797;
 }
