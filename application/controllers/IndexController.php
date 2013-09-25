@@ -2,6 +2,8 @@
 
 class IndexController extends BaseController
 {
+	private $runs_path = '/home/dillonl/weathervane/svg/';
+//	private $runs_path = '/Users/dillonl/Documents/weathervane/svg/';
 
     public function init()
     {
@@ -16,16 +18,16 @@ class IndexController extends BaseController
 	
 	public function testAction()
 	{
-		$runs_path = '/Users/dillonl/Documents/weathervane/svg/';
-		$dates = array_diff(scandir($runs_path), array('.', '..', '.DS_Store'));
+		$this->runs_path = '/Users/dillonl/Documents/weathervane/svg/';
+		$dates = array_diff(scandir($this->runs_path), array('.', '..', '.DS_Store'));
 		$runs = array();
 		foreach ($dates as $date)
 		{
-			$path = $runs_path . '/' . $date;
+			$path = $this->runs_path . '/' . $date;
 			$times = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 			foreach ($times as $time)
 			{
-				$path = $runs_path . '/' . $date . '/' . $time;
+				$path = $this->runs_path . '/' . $date . '/' . $time;
 				$fields = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 				foreach ($fields as $field)
 				{
@@ -38,21 +40,20 @@ class IndexController extends BaseController
 
 	public function getRunsAction()
 	{
-		$runs_path = '/Users/dillonl/Documents/weathervane/svg/';
-		$path = $runs_path;
+		$path = $this->runs_path;
 		$runs = array();
-		$dates = array_diff(scandir($runs_path), array('.', '..', '.DS_Store'));
+		$dates = array_diff(scandir($this->runs_path), array('.', '..', '.DS_Store'));
 		foreach ($dates as $date)
 		{
-			$path = $runs_path . '/' . $date;
+			$path = $this->runs_path . '/' . $date;
 			$times = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 			foreach ($times as $time)
 			{
-				$path = $runs_path . '/' . $date . '/' . $time;
+				$path = $this->runs_path . '/' . $date . '/' . $time;
 				$fields = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 				foreach ($fields as $field)
 				{
-					$path = $runs_path . '/' . $date . '/' . $time . '/' . $field;
+					$path = $this->runs_path . '/' . $date . '/' . $time . '/' . $field;
 					$heights = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 					foreach ($heights as $height)
 					{
@@ -73,7 +74,7 @@ class IndexController extends BaseController
 //		$height = strtolower($this->sanitizeFilePath($height));
 //		$field = strtolower($this->sanitizeFilePath($field));
 		
-		$svgPath = '/Users/dillonl/Documents/weathervane/svg/' . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/';
+		$svgPath = $this->runs_path . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/';
 		
 //		$svgPath = APPLICATION_PATH . '/../public/svg/' . $run . '/' . $height . '/' . $field . '/';
 		if (!file_exists($svgPath))
@@ -94,7 +95,7 @@ class IndexController extends BaseController
 	
 	public function getSVGFileAction($run, $field, $height, $filename)
 	{	
-		$svgFilePath = '/Users/dillonl/Documents/weathervane/svg/' . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/' . $filename;
+		$svgFilePath = $this->runs_path . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/' . $filename;
 		
 		header('Content-Type: image/svg+xml');
 		header('Content-Disposition: attachment; filename="' . $filename . '"');
