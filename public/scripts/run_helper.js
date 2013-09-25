@@ -26,7 +26,6 @@ var $viewBoxHeight = 128;
 var $isDragging = false;
 var $zoomValues = [130, 100, 80, 60, 40, 20];
 
-
 $(function () {
 	$($run_selector_id).change(function () { selectRun(); });
 	$($height_selector_id).change(function () { selectHeight(); });
@@ -107,7 +106,8 @@ function selectHeight() {
 	var run_time_height = $($run_selector_id).val() + $($height_selector_id).val();
 	for (var index in $fields[run_time_height]) {
 		var run = $fields[run_time_height][index];
-		$($field_selector_id).append('<option value="' + run.field + '">' + run.field + '</option>');
+		// this is where the lookup of the map goes
+		$($field_selector_id).append('<option value="' + run.field + '" data-level_set="' + run.level_set + '">' + run.field + ' (' + run.level_set_map[run.level_set] + ')</option>');
 	}
 	$($field_selector_id).removeAttr('disabled');
 	removeSVGAnimation();
@@ -115,15 +115,15 @@ function selectHeight() {
 
 function selectField() {
 	var run_time_height_field = $($run_selector_id).val() + $($field_selector_id).val();
-	var run = $fields[run_time_height_field];
+	var level_set = $($field_selector_id).find(":selected").attr('data-level_set');
 	$($svg_container).css('display', 'none');
 	$($loading_image_id).show();
-	var files = getFileList();
+	var files = getFileList(level_set);
 	$($svg_container).html('');
 	var count = 0;
 	$.each(files,
 		function (index, fileName) {
-			var url = $navigationBaseUrl + '/index/get-svg-file?run=' + $($run_selector_id).val() + '&height=' + $($height_selector_id).val() +'&field=' +$($field_selector_id).val() + "&filename=" + fileName;
+			var url = $navigationBaseUrl + '/index/get-svg-file?run=' + $($run_selector_id).val() + '&height=' + $($height_selector_id).val() +'&field=' +$($field_selector_id).val() + '&level_set=' + level_set + "&filename=" + fileName;
 			$($svg_container).append('<div id="svg_' + index + '" style="display: none;" class="svg_object"></div>');
 			$('#svg_' + index).load(url,
 				function (element) {
@@ -214,11 +214,11 @@ function zoomOut() {
 	setZoom(zoomVal);
 }
 
-function getFileList() {
+function getFileList(level_set) {
 	var fileList = [];
 	$.ajax({
 		url: $navigationBaseUrl + '/index/get-svg-file-list',
-		data: {'run': $($run_selector_id).val(), 'height': $($height_selector_id).val(),'field': $($field_selector_id).val()},
+		data: {'run': $($run_selector_id).val(), 'height': $($height_selector_id).val(),'field': $($field_selector_id).val(), 'level_set': level_set},
 		success:
 			function (data) {
 				if (data.success) {

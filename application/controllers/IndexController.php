@@ -2,8 +2,10 @@
 
 class IndexController extends BaseController
 {
-	private $runs_path = '/home/dillonl/weathervane/svg/';
-//	private $runs_path = '/Users/dillonl/Documents/weathervane/svg/';
+	
+//	private $runs_path = '/home/dillonl/weathervane/svg/';
+	private $runs_path = '/Users/dillonl/Documents/weathervane/svg/';
+	private $level_set_map = array(248 => '-25C', 253 => '-20C', 258 => '-15C', 283 => '+10C', 288 => '+15C', 5460 => '5460', 5580 => '5580', 5700 => '5700', 5820 => '5820');
 
     public function init()
     {
@@ -57,8 +59,13 @@ class IndexController extends BaseController
 					$heights = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 					foreach ($heights as $height)
 					{
-						$run = array('date' => $date, 'time' => $time, 'height' => $height, 'field' => $field);
-						$runs[] = $run;
+						$path = $this->runs_path . '/' . $date . '/' . $time . '/' . $field . '/' . $height;
+						$level_sets = array_diff(scandir($path), array('.', '..', '.DS_Store'));
+						foreach ($level_sets as $level_set)
+						{
+							$run = array('date' => $date, 'time' => $time, 'height' => $height, 'field' => $field, 'level_set' => $level_set, 'level_set_map' => $this->level_set_map);
+							$runs[] = $run;
+						}
 					}
 				}
 			}
@@ -68,15 +75,14 @@ class IndexController extends BaseController
 		return $this->_helper->json($runs);
 	}
 
-	public function getSvgFileListAction($run, $height, $field)
+	public function getSvgFileListAction($run, $height, $field, $level_set)
 	{
 //		$run = strtolower($this->sanitizeFilePath($run));
 //		$height = strtolower($this->sanitizeFilePath($height));
 //		$field = strtolower($this->sanitizeFilePath($field));
 		
-		$svgPath = $this->runs_path . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/';
+		$svgPath = $this->runs_path . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/' . $level_set;
 		
-//		$svgPath = APPLICATION_PATH . '/../public/svg/' . $run . '/' . $height . '/' . $field . '/';
 		if (!file_exists($svgPath))
 		{
 			return $this->_helper->json(array('success' => false, 'message' => 'Weather information is unavailable', 'path' =>$svgPath));
@@ -93,20 +99,17 @@ class IndexController extends BaseController
 		return $this->_helper->json(array('success' => true, 'filenames' =>$tmp_files, 'path' => 'svg/' . $run . '/' . $height . '/' . $field . '/'));
 	}
 	
-	public function getSVGFileAction($run, $field, $height, $filename)
+	public function getSVGFileAction($run, $field, $height, $level_set, $filename)
 	{	
-		$svgFilePath = $this->runs_path . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/' . $filename;
+		$svgFilePath = $this->runs_path . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/' . $level_set . '/' . $filename;
 		
 		header('Content-Type: image/svg+xml');
 		header('Content-Disposition: attachment; filename="' . $filename . '"');
 		readfile($svgFilePath);
 
-		// disable the view ... and perhaps the layout
+		// disable the view and layout
 		$this->view->layout()->disableLayout();
 		$this->_helper->viewRenderer->setNoRender(true);
-		//call the action helper to send the file to the browser
-//		$this->_helper->SendFile->sendFile($svgFilePath, 'image/svg+xml');
-//		$this->_helper->viewRenderer->setNoRender();
 	}
 
 }
