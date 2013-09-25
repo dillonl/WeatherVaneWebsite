@@ -13,6 +13,18 @@ var $forward_id = '#step-forward';
 var $back_id = '#step-back';
 var $animationStepTracker;
 var $zoomValue = 1;
+var $timeStepValueInMillisconds = 1000;
+var $svgCurrentImageIndex = -1;
+var $playing = false;
+var $playSetIntervalFunctionHandle = null; // this is so we can stop the animation if we need to.
+var $viewBoxX = 30;
+var $viewBoxY = 0;
+var $xOffset = 150;
+var $yOffset = 30;
+var $viewBoxWidth = 128;
+var $viewBoxHeight = 128;
+var $isDragging = false;
+var $zoomValues = [130, 100, 80, 60, 40, 20];
 
 
 $(function () {
@@ -31,6 +43,8 @@ $(function () {
 	$($back_id).click(function () { backAnimation(); });
 
 	populateRunSelector();
+	
+//	selectField();
 
 });
 
@@ -43,7 +57,7 @@ function populateRunSelector() {
 		function (data) {
 			for (var i = 0; i < data.length; ++i) {
 				var run = data[i];
-				var run_time = run.date + " t" + run.time;
+				var run_time = run.date + "." + run.time;
 				if ($runs[run_time] == null) {
 					$runs[run_time] = run;
 				}
@@ -68,7 +82,8 @@ function populateRunSelector() {
 function populateRunSelectorElement() {
 	$($run_selector_id).find('option').remove().end().append('<option value="">--Select a Run--</option>').val(""); // clear the run selector
 	for (var run_time in $runs) {
-		$($run_selector_id).append('<option value="' + run_time + '">' + run_time + '</option>');
+		var run = $runs[run_time];
+		$($run_selector_id).append('<option value="' + run.date + "." + run.time + '">' + run_time + '</option>');
 	}
 	$($run_selector_id).removeAttr('disabled');
 	$($height_selector_id).attr('disabled', 'disabled');
@@ -80,8 +95,7 @@ function selectRun() {
 	var run_time = $($run_selector_id).val();
 	for (var index in $heights[run_time]) {
 		var run = $heights[run_time][index];
-		var run_time_height = run.date + " t" + run.time + run.height;
-		$($height_selector_id).append('<option value="' + run_time_height + '">' + run.height + '</option>');
+		$($height_selector_id).append('<option value="' + run.height + '">' + run.height + '</option>');
 	}
 	$($height_selector_id).removeAttr('disabled');
 	$($field_selector_id).attr('disabled', 'disabled');
@@ -90,59 +104,92 @@ function selectRun() {
 
 function selectHeight() {
 	$($field_selector_id).find('option').remove().end().append('<option value="">--Select a Field--</option>').val(""); // clear the run selector
-	var run_time_height = $($height_selector_id).val();
+	var run_time_height = $($run_selector_id).val() + $($height_selector_id).val();
 	for (var index in $fields[run_time_height]) {
 		var run = $fields[run_time_height][index];
-		var run_time_height_field = run_time_height + run.field;
-		$($field_selector_id).append('<option value="' + run_time_height_field + '">' + run.field + '</option>');
+		$($field_selector_id).append('<option value="' + run.field + '">' + run.field + '</option>');
 	}
 	$($field_selector_id).removeAttr('disabled');
 	removeSVGAnimation();
 }
 
 function selectField() {
-	var run_time_height_field = $($field_selector_id).val();
+	var run_time_height_field = $($run_selector_id).val() + $($field_selector_id).val();
 	var run = $fields[run_time_height_field];
 	$($svg_container).css('display', 'none');
 	$($loading_image_id).show();
-	$($svg_container).load($navigationBaseUrl + '/index/get_svg_file/anim_212.svg',
-		{filename: 'anim_212.svg'},
-		function (data) {
-			$($svg_container).show();
-			$($svg_container).find('svg').width('100%').height('100%');
-			$($loading_image_id).hide();
-			$($svg_controls_id).show();
+	var files = getFileList();
+	$($svg_container).html('');
+	var count = 0;
+	$.each(files,
+		function (index, fileName) {
+			var url = $navigationBaseUrl + '/index/get-svg-file?run=' + $($run_selector_id).val() + '&height=' + $($height_selector_id).val() +'&field=' +$($field_selector_id).val() + "&filename=" + fileName;
+			$($svg_container).append('<div id="svg_' + index + '" style="display: none;" class="svg_object"></div>');
+			$('#svg_' + index).load(url,
+				function (element) {
+					//					$($('#svg_' + index).find('svg')[0]).attr('width', '100%');
+//					$($('#svg_' + index).find('svg')[0]).attr('height', '100%');
+				}
+			);
+			if (index >= files.length - 1) {
+				setTimeout( 
+					function () {
+//						setViewBox($viewBoxX, $viewBoxY, $viewBoxWidth, $viewBoxHeight);
+						$($svg_controls_id).show();
+						$($loading_image_id).hide();
+						$($svg_container).show();
+						playAnimation();
+						$('#svg-container').mousedown(function () { $isDragging = true; });
+						$('#svg-container').mousemove(function (event) { 
+							if ($isDragging) {
+//								setViewBox((event.clientX * -0.3) + $xOffset, (event.clientY * -0.3) + $yOffset, $viewBoxWidth, $viewBoxHeight);
+							} 
+						});
+						$(window).mouseup(function () { $isDragging = false;});
+					},
+					2000
+				);
+			}
 		}
 	);
+	
+}
+
+function getCurrentFrame() {
+	return $('.svg_object').get($svgCurrentImageIndex);
+}
+
+function incrementFrame(incrementor) {
+	$(getCurrentFrame()).hide();
+	$svgCurrentImageIndex = (($svgCurrentImageIndex + incrementor) % $('.svg_object').length)
+	var nextSVGObject = $('.svg_object').get($svgCurrentImageIndex);
+	$(nextSVGObject).show();
 }
 
 function playAnimation() {
-	getSVGDomObject().unpauseAnimations();
-	$animationStepTracker = null;
-
-
+	if ($playing) { return; } // so there is no way to overlap setIntervals
+	$playing = true;
+	incrementFrame(1);
+	$playSetIntervalFunctionHandle = setInterval(
+		function () {
+			if (!$playing) { return; }
+			incrementFrame(1);
+		}, $timeStepValueInMillisconds);
 }
 
 function pauseAnimation() {
-	getSVGDomObject().pauseAnimations();
-	if ($animationStepTracker == null) {
-		$animationStepTracker = getSVGDomObject().getCurrentTime();
-	}
+	clearInterval($playSetIntervalFunctionHandle);
+	$playing = false;
 }
 
 function forwardAnimation() {
 	pauseAnimation();
-	$animationStepTracker += getTimeStep();
-	getSVGDomObject().setCurrentTime($animationStepTracker);
+	incrementFrame(1);
 }
 
 function backAnimation() {
 	pauseAnimation();
-	$animationStepTracker -= getTimeStep();
-	if ($animationStepTracker <= 0) {
-		$animationStepTracker = getFrameCount() * getTimeStep();
-	}
-	getSVGDomObject().setCurrentTime($animationStepTracker);
+	incrementFrame(-1);
 }
 
 function getTimeStep() {
@@ -153,14 +200,64 @@ function getFrameCount() {
 	return $(getSVGDomObject()).find('image').length;
 }
 
+function getMaxZoomValue() {
+	return $('.zoom-indicator').length;
+}
+
+function zoomIn() {
+	var zoomVal = (getMaxZoomValue() <= $zoomValue) ? $zoomValue : $zoomValue + 1;
+	setZoom(zoomVal);
+}
+
+function zoomOut() {
+	zoomVal = (1 >= $zoomValue) ? $zoomValue : $zoomValue - 1;
+	setZoom(zoomVal);
+}
+
+function getFileList() {
+	var fileList = [];
+	$.ajax({
+		url: $navigationBaseUrl + '/index/get-svg-file-list',
+		data: {'run': $($run_selector_id).val(), 'height': $($height_selector_id).val(),'field': $($field_selector_id).val()},
+		success:
+			function (data) {
+				if (data.success) {
+					$.each(data.filenames,
+						function (index, element) {
+							fileList.push(element)
+						}
+					);
+				}
+				else {
+					alert(data.message);
+				}
+			},
+		async: false
+	});	
+	return fileList;
+}
+
 function removeSVGAnimation() {
 	$($svg_container).html('');
 	$($svg_controls_id).hide();
 	$animationStepTracker = null;
-	setZoom(1);
+	//setZoom(1);
+}
+function setViewBox(x, y, width, height) {
+	return;
+	$($svg_container).find('svg').each( 
+		function (index, element) {
+			element.setAttribute('viewBox', x + ' ' + y + ' ' + width + ' ' + height);
+		}
+	);
+	$viewBoxX = x;
+	$viewBoxY = y;
+	$viewBoxWidth = width;
+	$viewBoxHeight = height;
 }
 
 function setZoom(zoomVal) {
+	if (getCurrentFrame() == undefined) { return; }
 	$zoomValue = zoomVal;
 	$.each($('.zoom-indicator'),
 		function (index, element) {
@@ -168,20 +265,5 @@ function setZoom(zoomVal) {
 		}
 	);
 	$('#zoom_' + $zoomValue).addClass('bold-zoom');
-}
-
-function getMaxZoomValue() {
-	return $('.zoom-indicator').length;
-}
-
-function zoomIn() {
-	alert("zoom doesn't work yet");
-	var zoomVal = (getMaxZoomValue() <= $zoomValue) ? $zoomValue : $zoomValue + 1;
-	setZoom(zoomVal);
-}
-
-function zoomOut() {
-	alert("zoom doesn't work yet");
-	zoomVal = (1 >= $zoomValue) ? $zoomValue : $zoomValue - 1;
-	setZoom(zoomVal);
+//	setViewBox($viewBoxX, $viewBoxY, $zoomValues[zoomVal - 1], $zoomValues[zoomVal - 1]);
 }

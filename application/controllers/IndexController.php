@@ -13,21 +13,48 @@ class IndexController extends BaseController
     {
         $this->view->headScript()->appendFile(Model_Helpers_URL::AssetURL() .'/scripts/run_helper.js');
     }
+	
+	public function testAction()
+	{
+		$runs_path = '/Users/dillonl/Documents/weathervane/svg/';
+		$dates = array_diff(scandir($runs_path), array('.', '..', '.DS_Store'));
+		$runs = array();
+		foreach ($dates as $date)
+		{
+			$path = $runs_path . '/' . $date;
+			$times = array_diff(scandir($path), array('.', '..', '.DS_Store'));
+			foreach ($times as $time)
+			{
+				$path = $runs_path . '/' . $date . '/' . $time;
+				$fields = array_diff(scandir($path), array('.', '..', '.DS_Store'));
+				foreach ($fields as $field)
+				{
+					$runs[] = $field;
+				}
+			}
+		}
+		return $this->_helper->json($runs);
+	}
 
 	public function getRunsAction()
 	{
+		$runs_path = '/Users/dillonl/Documents/weathervane/svg/';
+		$path = $runs_path;
 		$runs = array();
-		$times = array('03', '09', '15', '21');
-		$dates = array('20130910', '20130909', '20130908');
-		$heights = array('surface', '10 mb', '175 mb');
-		$fields = array('TMP', 'UGRD', 'RH');
-		foreach ($times as $time)
+		$dates = array_diff(scandir($runs_path), array('.', '..', '.DS_Store'));
+		foreach ($dates as $date)
 		{
-			foreach ($dates as $date)
+			$path = $runs_path . '/' . $date;
+			$times = array_diff(scandir($path), array('.', '..', '.DS_Store'));
+			foreach ($times as $time)
 			{
-				foreach ($heights as $height)
+				$path = $runs_path . '/' . $date . '/' . $time;
+				$fields = array_diff(scandir($path), array('.', '..', '.DS_Store'));
+				foreach ($fields as $field)
 				{
-					foreach ($fields as $field)
+					$path = $runs_path . '/' . $date . '/' . $time . '/' . $field;
+					$heights = array_diff(scandir($path), array('.', '..', '.DS_Store'));
+					foreach ($heights as $height)
 					{
 						$run = array('date' => $date, 'time' => $time, 'height' => $height, 'field' => $field);
 						$runs[] = $run;
@@ -40,35 +67,45 @@ class IndexController extends BaseController
 		return $this->_helper->json($runs);
 	}
 
-	public function getListSVGFilesAction($run, $field, $height)
+	public function getSvgFileListAction($run, $height, $field)
 	{
-		$run = $this->sanitizeFilePath($run);
-		$field = $this->sanitizeFilePath($field);
-		$height = $this->sanitizeFilePath($height);
-		$files = array();
-		$svgPath = APPLICATION_PATH . '/../svg/' . $run . '/' . $height . '/' . $field;
-		$handle = opendir($svgPath);
-		if ($handle)
+//		$run = strtolower($this->sanitizeFilePath($run));
+//		$height = strtolower($this->sanitizeFilePath($height));
+//		$field = strtolower($this->sanitizeFilePath($field));
+		
+		$svgPath = '/Users/dillonl/Documents/weathervane/svg/' . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/';
+		
+//		$svgPath = APPLICATION_PATH . '/../public/svg/' . $run . '/' . $height . '/' . $field . '/';
+		if (!file_exists($svgPath))
 		{
-			while (false !== ($entry = readdir($handle)))
+			return $this->_helper->json(array('success' => false, 'message' => 'Weather information is unavailable', 'path' =>$svgPath));
+		}
+		$files = array_diff(scandir($svgPath), array('.','..'));
+		$tmp_files = array();
+		foreach ($files as $file)
+		{
+			if (strpos($file, "anim") === false)
 			{
-				if ($entry != '.' && $entry != '..')
-				{
-					$files [] = $entry;
-				}
+				$tmp_files[] = $file;
 			}
 		}
-		return $this->_helper->json($files);
+		return $this->_helper->json(array('success' => true, 'filenames' =>$tmp_files, 'path' => 'svg/' . $run . '/' . $height . '/' . $field . '/'));
 	}
-
-	public function getSVGFileAction($id)
-	{
-		$svgPath = 'C:\\xampp\\htdocs\\WeatherVaneWeb\\public\\svg\\' . $id;
+	
+	public function getSVGFileAction($run, $field, $height, $filename)
+	{	
+		$svgFilePath = '/Users/dillonl/Documents/weathervane/svg/' . str_replace('.' , '/', $run) . '/'. $field . '/' . $height . '/' . $filename;
+		
 		header('Content-Type: image/svg+xml');
-		header('Content-Disposition: attachment; filename="weather-animation.svg"');
-		readfile($svgPath);
+		header('Content-Disposition: attachment; filename="' . $filename . '"');
+		readfile($svgFilePath);
+
+		// disable the view ... and perhaps the layout
 		$this->view->layout()->disableLayout();
-        $this->_helper->viewRenderer->setNoRender(true);
+		$this->_helper->viewRenderer->setNoRender(true);
+		//call the action helper to send the file to the browser
+//		$this->_helper->SendFile->sendFile($svgFilePath, 'image/svg+xml');
+//		$this->_helper->viewRenderer->setNoRender();
 	}
 
 }
