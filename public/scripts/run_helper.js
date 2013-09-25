@@ -114,7 +114,6 @@ function selectHeight() {
 }
 
 function selectField() {
-	var run_time_height_field = $($run_selector_id).val() + $($field_selector_id).val();
 	var level_set = $($field_selector_id).find(":selected").attr('data-level_set');
 	$($svg_container).css('display', 'none');
 	$($loading_image_id).show();
@@ -132,23 +131,20 @@ function selectField() {
 				}
 			);
 			if (index >= files.length - 1) {
-				setTimeout( 
-					function () {
-//						setViewBox($viewBoxX, $viewBoxY, $viewBoxWidth, $viewBoxHeight);
-						$($svg_controls_id).show();
-						$($loading_image_id).hide();
-						$($svg_container).show();
-						playAnimation();
-						$('#svg-container').mousedown(function () { $isDragging = true; });
-						$('#svg-container').mousemove(function (event) { 
-							if ($isDragging) {
+				$($svg_controls_id).show();
+				$($loading_image_id).hide();
+				$($svg_container).show();
+				$playing = false;
+				$svgCurrentImageIndex = 0;
+				clearInterval($playSetIntervalFunctionHandle);
+				playAnimation();
+				$('#svg-container').mousedown(function () { $isDragging = true; });
+				$('#svg-container').mousemove(function (event) { 
+					if ($isDragging) {
 //								setViewBox((event.clientX * -0.3) + $xOffset, (event.clientY * -0.3) + $yOffset, $viewBoxWidth, $viewBoxHeight);
-							} 
-						});
-						$(window).mouseup(function () { $isDragging = false;});
-					},
-					2000
-				);
+					} 
+				});
+				$(window).mouseup(function () { $isDragging = false;});
 			}
 		}
 	);
