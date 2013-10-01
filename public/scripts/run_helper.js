@@ -11,6 +11,8 @@ var $play_id = '#play';
 var $pause_id = '#pause';
 var $forward_id = '#step-forward';
 var $back_id = '#step-back';
+var $forecast_hour_header_id = '#forcast_hour_header';
+var $forecast_hour_label_id = '#forecast_hour_label';
 var $animationStepTracker;
 var $zoomValue = 1;
 var $timeStepValueInMillisconds = 1000;
@@ -82,7 +84,7 @@ function populateRunSelectorElement() {
 	$($run_selector_id).find('option').remove().end().append('<option value="">--Select a Run--</option>').val(""); // clear the run selector
 	for (var run_time in $runs) {
 		var run = $runs[run_time];
-		$($run_selector_id).append('<option value="' + run.date + "." + run.time + '">' + run_time + '</option>');
+		$($run_selector_id).append('<option value="' + run.date + "." + run.time + '">' + run.run_label + '</option>');
 	}
 	$($run_selector_id).removeAttr('disabled');
 	$($height_selector_id).attr('disabled', 'disabled');
@@ -123,7 +125,8 @@ function selectField() {
 	$.each(files,
 		function (index, fileName) {
 			var url = $navigationBaseUrl + '/index/get-svg-file?run=' + $($run_selector_id).val() + '&height=' + $($height_selector_id).val() +'&field=' +$($field_selector_id).val() + '&level_set=' + level_set + "&filename=" + fileName;
-			$($svg_container).append('<div id="svg_' + index + '" style="display: none;" class="svg_object"></div>');
+			var forecast_hour = fileName.substring(fileName.lastIndexOf('_') + 1).replace(".svg", "");
+			$($svg_container).append('<div id="svg_' + index + '" style="display: none;" class="svg_object" data-forecast_hour="' + forecast_hour + '"></div>');
 			$('#svg_' + index).load(url,
 				function (element) {
 					//					$($('#svg_' + index).find('svg')[0]).attr('width', '100%');
@@ -134,8 +137,9 @@ function selectField() {
 				$($svg_controls_id).show();
 				$($loading_image_id).hide();
 				$($svg_container).show();
+				$($forecast_hour_header_id).show();
 				$playing = false;
-				$svgCurrentImageIndex = 0;
+				$svgCurrentImageIndex = -1;
 				clearInterval($playSetIntervalFunctionHandle);
 				playAnimation();
 				$('#svg-container').mousedown(function () { $isDragging = true; });
@@ -160,6 +164,9 @@ function incrementFrame(incrementor) {
 	$svgCurrentImageIndex = (($svgCurrentImageIndex + incrementor) % $('.svg_object').length)
 	var nextSVGObject = $('.svg_object').get($svgCurrentImageIndex);
 	$(nextSVGObject).show();
+	console.log($(nextSVGObject).find('image').attr('xlink:href'));
+	$($forecast_hour_label_id).html($(nextSVGObject).attr('data-forecast_hour'));
+	
 }
 
 function playAnimation() {
@@ -236,6 +243,7 @@ function getFileList(level_set) {
 function removeSVGAnimation() {
 	$($svg_container).html('');
 	$($svg_controls_id).hide();
+	$($forecast_hour_header_id).hide();
 	$animationStepTracker = null;
 	//setZoom(1);
 }

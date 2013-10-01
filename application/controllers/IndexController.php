@@ -51,6 +51,7 @@ class IndexController extends BaseController
 			$times = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 			foreach ($times as $time)
 			{
+				$run_label = $this->getRunLabel($date, $time);
 				$path = $this->runs_path . '/' . $date . '/' . $time;
 				$fields = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 				foreach ($fields as $field)
@@ -63,7 +64,7 @@ class IndexController extends BaseController
 						$level_sets = array_diff(scandir($path), array('.', '..', '.DS_Store'));
 						foreach ($level_sets as $level_set)
 						{
-							$run = array('date' => $date, 'time' => $time, 'height' => $height, 'field' => $field, 'level_set' => $level_set, 'level_set_map' => $this->level_set_map);
+							$run = array('date' => $date, 'time' => $time, 'height' => $height, 'field' => $field, 'level_set' => $level_set, 'level_set_map' => $this->level_set_map, 'run_label' => $run_label);
 							$runs[] = $run;
 						}
 					}
@@ -73,6 +74,28 @@ class IndexController extends BaseController
 		$this->view->layout()->disableLayout();
         $this->_helper->viewRenderer->setNoRender(true);
 		return $this->_helper->json($runs);
+	}
+	
+	/*
+	 * $date is yyyymmdd
+	 * $time is either 03, 09, 15, or 21
+	 */
+	private function getRunLabel($date, $time)
+	{
+		$year = substr($date, 0, 4);
+		$month = substr($date, 4, 2);
+		$day = substr($date, 6, 2);
+		
+		$run_string = $month . '/' . $day . '/' . $year;
+		if (intval($time) > 12)
+		{
+			$run_string .= ' ' . ($time - 12) . ':00 pm';
+		}
+		else
+		{
+			$run_string .= ' ' . (intval($time)) . ':00 am';
+		}
+		return $run_string;
 	}
 
 	public function getSvgFileListAction($run, $height, $field, $level_set)
@@ -96,7 +119,15 @@ class IndexController extends BaseController
 				$tmp_files[] = $file;
 			}
 		}
+		usort($tmp_files, array('IndexController', 'sortSVGFiles'));
 		return $this->_helper->json(array('success' => true, 'filenames' =>$tmp_files, 'path' => 'svg/' . $run . '/' . $height . '/' . $field . '/'));
+	}
+	
+	private static function sortSVGFiles($a, $b)
+	{
+		$a_forecast_hour = str_replace(".svg", "", substr($a, strrpos($a, '_') + 1));
+		$b_forecast_hour = str_replace(".svg", "", substr($b, strrpos($b, '_') + 1));
+		return intval($a_forecast_hour) > intval($b_forecast_hour);
 	}
 	
 	public function getSVGFileAction($run, $field, $height, $level_set, $filename)
